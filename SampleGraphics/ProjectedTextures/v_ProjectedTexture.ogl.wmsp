@@ -1,0 +1,87 @@
+!!ARBvp1.0
+# cgc version 1.4.0000, build date Jun  9 2005 12:09:02
+# command line args: -profile arbvp1
+# source file: ProjectedTexture.cg
+#vendor NVIDIA Corporation
+#version 1.0.02
+#profile arbvp1
+#program v_ProjectedTexture
+#semantic v_ProjectedTexture.WVPMatrix
+#semantic v_ProjectedTexture.ProjectorMatrix
+#semantic v_ProjectedTexture.CameraModelPosition
+#semantic v_ProjectedTexture.MaterialEmissive
+#semantic v_ProjectedTexture.MaterialAmbient
+#semantic v_ProjectedTexture.MaterialDiffuse
+#semantic v_ProjectedTexture.MaterialSpecular
+#semantic v_ProjectedTexture.Light0ModelDirection
+#semantic v_ProjectedTexture.Light0Ambient
+#semantic v_ProjectedTexture.Light0Diffuse
+#semantic v_ProjectedTexture.Light0Specular
+#var float4 kModelPosition : $vin.POSITION : POSITION : 0 : 1
+#var float3 kModelNormal : $vin.NORMAL : NORMAL : 1 : 1
+#var float4 kClipPosition : $vout.POSITION : HPOS : 2 : 1
+#var float4 kVertexColor : $vout.COLOR : COL0 : 3 : 1
+#var float4 kTCoord : $vout.TEXCOORD0 : TEX0 : 4 : 1
+#var float4x4 WVPMatrix :  : c[1], 4 : 5 : 1
+#var float4x4 ProjectorMatrix :  : c[5], 4 : 6 : 1
+#var float3 CameraModelPosition :  : c[10] : 7 : 1
+#var float3 MaterialEmissive :  : c[17] : 8 : 1
+#var float3 MaterialAmbient :  : c[15] : 9 : 1
+#var float4 MaterialDiffuse :  : c[9] : 10 : 1
+#var float4 MaterialSpecular :  : c[12] : 11 : 1
+#var float3 Light0ModelDirection :  : c[11] : 12 : 1
+#var float3 Light0Ambient :  : c[14] : 13 : 1
+#var float3 Light0Diffuse :  : c[16] : 14 : 1
+#var float3 Light0Specular :  : c[13] : 15 : 1
+#const c[0] = 0
+PARAM c[18] = { { 0 },
+		program.local[1..17] };
+TEMP R0;
+TEMP R1;
+ADD R1.xyz, -vertex.position, c[10];
+DP3 R0.x, R1, R1;
+RSQ R0.x, R0.x;
+MAD R1.xyz, R0.x, R1, -c[11];
+DP3 R0.x, R1, R1;
+RSQ R0.x, R0.x;
+MUL R0.xyz, R0.x, R1;
+DP3 R1.xy, vertex.normal, R0;
+DP3 R0.z, vertex.normal, c[11];
+SLT R0.x, c[0], R1;
+ABS R0.x, R0;
+MOV R1.z, c[12].w;
+SLT R0.y, c[0].x, -R0.z;
+SGE R0.x, c[0], R0;
+MUL R0.x, R0.y, R0;
+LIT R1.z, R1.xyzz;
+ABS R0.y, R0;
+SGE R0.y, c[0].x, R0;
+MAD R0.x, -R1.z, R0, R1.z;
+MAD R1.w, R0.z, R0.y, -R0.z;
+MUL R1.xyz, R1.w, c[9];
+MAD R0.x, -R0, R0.y, R0;
+MOV R0.yzw, c[15].xxyz;
+MUL R0.yzw, c[14].xxyz, R0;
+MUL R1.xyz, R1, c[16];
+ADD R1.xyz, R0.yzww, R1;
+ADD R1.xyz, R1, -R0.yzww;
+SLT R1.w, c[0].x, R1;
+MAD R1.xyz, R1, R1.w, R0.yzww;
+SLT R0.w, c[0].x, R0.x;
+MUL R0.xyz, R0.x, c[12];
+MAD R0.xyz, R0, c[13], R1;
+MUL R0.w, R1, R0;
+ADD R0.xyz, R0, -R1;
+MAD R0.xyz, R0, R0.w, R1;
+ADD result.color.xyz, R0, c[17];
+MUL R1, vertex.position.y, c[2];
+MUL R0, vertex.position.y, c[6];
+MAD R1, vertex.position.x, c[1], R1;
+MAD R0, vertex.position.x, c[5], R0;
+MAD R1, vertex.position.z, c[3], R1;
+MAD R0, vertex.position.z, c[7], R0;
+MAD result.position, vertex.position.w, c[4], R1;
+MAD result.texcoord[0], vertex.position.w, c[8], R0;
+MOV result.color.w, c[9];
+END
+# 45 instructions, 2 R-regs

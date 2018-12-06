@@ -1,0 +1,402 @@
+//----------------------------------------------------------------------------
+// Shared functions.
+//----------------------------------------------------------------------------
+void GetDirectionalLightFactors
+(
+    float3    kModelPosition,
+    float3    kModelNormal,
+    float3    kCameraPosition,
+    float3    kLightDirection,
+    float     fSpecularExponent,
+    out float fDiffuseFactor,
+    out float fSpecularFactor)
+{
+    float fDiff, fSpec;
+
+    fDiff = -dot(kModelNormal,kLightDirection);
+    if (fDiff > 0.0f)
+    {
+        float3 kViewVector = normalize(kCameraPosition - kModelPosition);
+        float3 kHalfVector = normalize(kViewVector - kLightDirection);
+        fSpec = dot(kModelNormal,kHalfVector);
+        if (fSpec > 0.0f)
+        {
+            fSpec = pow(fSpec,fSpecularExponent);
+        }
+        else
+        {
+            fSpec = 0.0f;
+        }
+    }
+    else
+    {
+        fDiff = 0.0f;
+        fSpec = 0.0f;
+    }
+    
+    fDiffuseFactor = fDiff;
+    fSpecularFactor = fSpec;
+}
+//----------------------------------------------------------------------------
+void GetPointLightFactors
+(
+    float3    kModelPosition,
+    float3    kModelNormal,
+    float3    kCameraPosition,
+    float3    kLightPosition,
+    float     fSpecularExponent,
+    out float fDiffuseFactor,
+    out float fSpecularFactor)
+{
+    float fDiff, fSpec;
+
+    float3 kVertexDirection = normalize(kModelPosition - kLightPosition);
+    fDiff = -dot(kModelNormal,kVertexDirection);
+    if (fDiff > 0.0f)
+    {
+        float3 kViewVector = normalize(kCameraPosition - kModelPosition);
+        float3 kHalfVector = normalize(kViewVector - kVertexDirection);
+        fSpec = dot(kModelNormal,kHalfVector);
+        if (fSpec > 0.0f)
+        {
+            fSpec = pow(fSpec,fSpecularExponent);
+        }
+        else
+        {
+            fSpec = 0.0f;
+        }
+    }
+    else
+    {
+        fDiff = 0.0f;
+        fSpec = 0.0f;
+    }
+
+    fDiffuseFactor = fDiff;
+    fSpecularFactor = fSpec;
+}
+//----------------------------------------------------------------------------
+void GetSpotLightFactors
+(
+    float3    kModelPosition,
+    float3    kModelNormal,
+    float3    kCameraPosition,
+    float3    kLightPosition,
+    float     fSpecularExponent,
+    float3    kSpotAxis,
+    float     fSpotCosAngle,
+    float     fSpotExponent,
+    out float fDiffuseFactor,
+    out float fSpecularFactor,
+    out float fSpotFactor)
+{
+    float fDiff, fSpec, fSpot;
+
+    float3 kVertexDirection = normalize(kModelPosition - kLightPosition);
+    float fVertexCosAngle = dot(kSpotAxis,kVertexDirection);
+    if (fVertexCosAngle >= fSpotCosAngle)
+    {
+        fDiff = -dot(kModelNormal,kVertexDirection);
+        if (fDiff > 0.0f)
+        {
+            float3 kViewVector = normalize(kCameraPosition - kModelPosition);
+            float3 kHalfVector = normalize(kViewVector - kVertexDirection);
+            fSpec = dot(kModelNormal,kHalfVector);
+            if (fSpec > 0.0f)
+            {
+                fSpec = pow(fSpec,fSpecularExponent);
+            }
+            else
+            {
+                fSpec = 0.0f;
+            }
+            fSpot = pow(fVertexCosAngle,fSpotExponent);
+        }
+        else
+        {
+            fDiff = 0.0f;
+            fSpec = 0.0f;
+            fSpot = 0.0f;
+        }
+    }
+    else
+    {
+        fDiff = 0.0f;
+        fSpec = 0.0f;
+        fSpot = 0.0f;
+    }
+
+    fDiffuseFactor = fDiff;
+    fSpecularFactor = fSpec;
+    fSpotFactor = fSpot;
+}
+//----------------------------------------------------------------------------
+float GetAttenuation
+(
+    float3x3 kWMatrix,
+    float3   kModelPos,
+    float3   kLightPos, 
+    float4   kAttenuation)
+{
+    // Attenuate the color (x=constant, y=linear, z=quadratic, w=intensity).
+    // Attenuation is not active when the x component is zero.  The distance
+    // must be computed in *world* coordinates.  The distance in camera
+    // coordinates is not correct when the MVP matrix has nonunit scaling
+    // factors.
+    
+    float3 kVertexModelDir = kModelPos - kLightPos;
+    float3 kVertexWorldDir = mul(kVertexModelDir,kWMatrix);
+    float fDistance = sqrt(
+        kVertexWorldDir.x*kVertexWorldDir.x +
+        kVertexWorldDir.y*kVertexWorldDir.y +
+        kVertexWorldDir.z*kVertexWorldDir.z);
+
+    float fAttn = kAttenuation.w/(kAttenuation.x + fDistance*(kAttenuation.y
+        + fDistance*kAttenuation.z));
+    
+    return fAttn;
+}
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// Vertex shaders for lighting.  The function names start with "L", for
+// lighting, and end with "VProgram" to support the program cataloging system
+// in the engine.  After "L" is the number of lights (currently 1 through 8).
+// After the number is a list of the light types.  Ambient lighting uses "a",
+// directional lighting uses "d", point lighting uses "p", and spot lighting
+// uses "s".  For example, the function L3apdVProgram represents three lights,
+// one of them ambient, one of them point, and one of them directional.
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// L1
+//----------------------------------------------------------------------------
+void v_L1a
+(
+    in float4        kModelPosition  : POSITION,
+    out float4       kClipPosition : POSITION,
+    out float4       kVertexColor : COLOR,
+    uniform float4x4 WVPMatrix,
+    uniform float3   MaterialEmissive,
+    uniform float3   MaterialAmbient,
+    uniform float3   Light0Ambient,
+    uniform float4   Light0Attenuation)
+{
+    // Transform the position from model space to clip space.
+    kClipPosition = mul(kModelPosition,WVPMatrix);
+
+    float3 kLAmb = Light0Attenuation.w*Light0Ambient;
+    kVertexColor.rgb = MaterialEmissive + MaterialAmbient*kLAmb;
+    kVertexColor.a = 1.0f;
+}
+//----------------------------------------------------------------------------
+void v_L1d
+(
+    in float4        kModelPosition  : POSITION,
+    in float3        kModelNormal : NORMAL,
+    out float4       kClipPosition : POSITION,
+    out float4       kVertexColor : COLOR,
+    uniform float4x4 WVPMatrix,
+    uniform float3   CameraModelPosition,
+    uniform float3   MaterialEmissive,
+    uniform float3   MaterialAmbient,
+    uniform float4   MaterialDiffuse,
+    uniform float4   MaterialSpecular,
+    uniform float3   Light0ModelDirection,
+    uniform float3   Light0Ambient,
+    uniform float3   Light0Diffuse,
+    uniform float3   Light0Specular,
+    uniform float4   Light0Attenuation)
+{
+    // Transform the position from model space to clip space.
+    kClipPosition = mul(kModelPosition,WVPMatrix);
+
+    float fDiff, fSpec;
+    GetDirectionalLightFactors((float3)kModelPosition,kModelNormal,
+        CameraModelPosition,Light0ModelDirection,MaterialSpecular.a,
+        fDiff,fSpec);
+
+    float3 kColor = MaterialAmbient*Light0Ambient;
+    if (fDiff > 0.0f)
+    {
+        kColor += fDiff*MaterialDiffuse.rgb*Light0Diffuse;
+        if (fSpec > 0.0f)
+        {
+            kColor += fSpec*MaterialSpecular.rgb*Light0Specular;
+        }
+    }
+
+    kVertexColor.rgb = MaterialEmissive + Light0Attenuation.w*kColor;
+    kVertexColor.a = MaterialDiffuse.a;
+}
+//----------------------------------------------------------------------------
+void v_L1p
+(
+    in float4        kModelPosition  : POSITION,
+    in float3        kModelNormal : NORMAL,
+    out float4       kClipPosition : POSITION,
+    out float4       kVertexColor : COLOR,
+    uniform float4x4 WVPMatrix,
+    uniform float4x4 WMatrix,
+    uniform float3   CameraModelPosition,
+    uniform float3   MaterialEmissive,
+    uniform float3   MaterialAmbient,
+    uniform float4   MaterialDiffuse,
+    uniform float4   MaterialSpecular,
+    uniform float3   Light0ModelPosition,
+    uniform float3   Light0Ambient,
+    uniform float3   Light0Diffuse,
+    uniform float3   Light0Specular,
+    uniform float4   Light0Attenuation)
+{
+    // Transform the position from model space to clip space.
+    kClipPosition = mul(kModelPosition,WVPMatrix);
+
+    float fDiff, fSpec;
+    GetPointLightFactors(kModelPosition.xyz,kModelNormal,
+        CameraModelPosition,Light0ModelPosition,MaterialSpecular.a,
+        fDiff,fSpec);
+
+    float fAttn = GetAttenuation((float3x3)WMatrix,kModelPosition.xyz,
+        Light0ModelPosition,Light0Attenuation);
+
+    float3 kColor = MaterialAmbient*Light0Ambient;
+    if (fDiff > 0.0f)
+    {
+        kColor += fDiff*MaterialDiffuse.xyz*Light0Diffuse;
+        if (fSpec > 0.0f)
+        {
+            kColor += fSpec*MaterialSpecular.xyz*Light0Specular;
+        }
+    }
+
+    kVertexColor.rgb = MaterialEmissive + fAttn*kColor;
+    kVertexColor.a = MaterialDiffuse.a;
+}
+//----------------------------------------------------------------------------
+void v_L1s
+(
+    in float4 kModelPosition  : POSITION,
+    in float3 kModelNormal : NORMAL,
+    out float4 kClipPosition : POSITION,
+    out float4 kVertexColor : COLOR,
+    uniform float4x4 WVPMatrix,
+    uniform float4x4 WMatrix,
+    uniform float3 CameraModelPosition,
+    uniform float3 MaterialEmissive,
+    uniform float3 MaterialAmbient,
+    uniform float4 MaterialDiffuse,
+    uniform float4 MaterialSpecular,
+    uniform float3 Light0ModelPosition,
+    uniform float3 Light0ModelDirection,
+    uniform float3 Light0Ambient,
+    uniform float3 Light0Diffuse,
+    uniform float3 Light0Specular,
+    uniform float4 Light0SpotCutoff,
+    uniform float4 Light0Attenuation)
+{
+    // Transform the position from model space to clip space.
+    kClipPosition = mul(kModelPosition,WVPMatrix);
+
+    float fDiff, fSpec, fSpot;
+    GetSpotLightFactors(kModelPosition.xyz,kModelNormal,
+        CameraModelPosition,Light0ModelPosition,MaterialSpecular.a,
+        Light0ModelDirection,Light0SpotCutoff.y,Light0SpotCutoff.w,fDiff,
+        fSpec,fSpot);
+
+    float fAttn = GetAttenuation((float3x3)WMatrix,kModelPosition.xyz,
+        Light0ModelPosition,Light0Attenuation);
+
+    float3 kColor = MaterialAmbient*Light0Ambient;
+    if (fSpot > 0.0f)
+    {
+        if (fDiff > 0.0f)
+        {
+            kColor += (fSpot*fDiff)*MaterialDiffuse.rgb*Light0Diffuse;
+            if (fSpec > 0.0f)
+            {
+                kColor += (fSpot*fSpec)*MaterialSpecular.rgb*Light0Specular;
+            }
+        }
+    }
+    
+    kVertexColor.rgb = MaterialEmissive + fAttn*kColor;
+    kVertexColor.a = MaterialDiffuse.a;
+}
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// L2
+//----------------------------------------------------------------------------
+void v_L2aa
+(
+    in float4        kModelPosition  : POSITION,
+    out float4       kClipPosition : POSITION,
+    out float4       kVertexColor : COLOR,
+    uniform float4x4 WVPMatrix,
+    uniform float3   MaterialEmissive,
+    uniform float3   MaterialAmbient,
+    uniform float3   Light0Ambient,
+    uniform float4   Light0Attenuation,
+    uniform float3   Light1Ambient,
+    uniform float4   Light1Attenuation)
+{
+    // Transform the position from model space to clip space.
+    kClipPosition = mul(kModelPosition,WVPMatrix);
+
+    float3 kLAmb =
+        Light0Attenuation.w*Light0Ambient +
+        Light1Attenuation.w*Light1Ambient;
+
+    kVertexColor.xyz = MaterialEmissive + MaterialAmbient*kLAmb;
+    kVertexColor.a = 1.0f;
+}
+//----------------------------------------------------------------------------
+void v_L2ad
+(
+    in float4        kModelPosition  : POSITION,
+    in float3        kModelNormal : NORMAL,
+    out float4       kClipPosition : POSITION,
+    out float4       kVertexColor : COLOR,
+    uniform float4x4 WVPMatrix,
+    uniform float3   CameraModelPosition,
+    uniform float3   MaterialEmissive,
+    uniform float3   MaterialAmbient,
+    uniform float4   MaterialDiffuse,
+    uniform float4   MaterialSpecular,
+    uniform float3   Light0Ambient,
+    uniform float4   Light0Attenuation,
+    uniform float3   Light1ModelDirection,
+    uniform float3   Light1Ambient,
+    uniform float3   Light1Diffuse,
+    uniform float3   Light1Specular,
+    uniform float4   Light1Attenuation)
+{
+    // Transform the position from model space to clip space.
+    kClipPosition = mul(kModelPosition,WVPMatrix);
+
+    float fDiff, fSpec;
+    GetDirectionalLightFactors((float3)kModelPosition,kModelNormal,
+        CameraModelPosition,Light1ModelDirection,MaterialSpecular.a,
+        fDiff,fSpec);
+
+    float3 kLAmb =
+        Light0Attenuation.w*Light0Ambient +
+        Light1Attenuation.w*Light1Ambient;
+
+    float3 kColor = MaterialAmbient*kLAmb;
+    if (fDiff > 0.0f)
+    {
+        float fProd = Light0Attenuation.w*fDiff;
+        kColor += fProd*MaterialDiffuse.rgb*Light1Diffuse;
+        if (fSpec > 0.0f)
+        {
+            fProd = Light0Attenuation.w*fSpec;
+            kColor += fProd*MaterialSpecular.rgb*Light1Specular;
+        }
+    }
+
+    kVertexColor.xyz = MaterialEmissive + kColor;
+    kVertexColor.a = MaterialDiffuse.a;
+}
+//----------------------------------------------------------------------------

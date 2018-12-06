@@ -1,0 +1,64 @@
+CFLAGS := -c
+ARFLAGS := rs
+
+ifeq (linux,$(findstring linux,$(SYS)))
+CC := /usr/bin/g++
+GCC := /usr/bin/gcc
+EGL := Glx
+AR := /usr/bin/ar
+INCPATH += -I /usr/X11R6/include
+endif
+
+ifeq (mingw,$(findstring mingw,$(SYS)))
+CC := /mingw/bin/g++
+GCC := /mingw/bin/gcc
+EGL := Wgl
+AR := /mingw/bin/ar
+CFLAGS += -DMINGW
+INCPATH += -I /mingw/include
+endif
+
+ifeq (sgi,$(findstring sgi,$(SYS)))
+CC := /usr/freeware/bin/g++
+GCC := /usr/freeware/bin/gcc
+EGL := Glx
+AR := /usr/bin/ar
+INCPATH += -I /usr/X11R6/include
+endif
+
+ifeq (Debug,$(findstring Debug,$(CFG)))
+CFLAGS += -g -D_DEBUG
+else
+CFLAGS += -O2 -DNDEBUG
+endif
+
+ifeq (Memory,$(findstring Memory,$(CFG)))
+CFLAGS += -DWM4_MEMORY_MANAGER
+endif
+
+INCPATH := \
+    -I ../.\
+    -I ../Intersection\
+    -I ../LCPSolver\
+    -I ../ParticleSystem\
+    -I ../RigidBody\
+    -I ../../SDK/Include
+    
+INCDIR := ../../SDK/Include
+INC := $(wildcard Wm4*.h) $(wildcard Wm4*.inl)
+INC := $(notdir $(INC))
+SRC := $(wildcard Wm4*.cpp)
+SRC := $(notdir $(SRC))
+OBJDIR := ../$(CFG)
+OBJ := $(SRC:%.cpp=$(OBJDIR)/%.o)
+LIB := ../../SDK/Library/$(CFG)/libWm4Physics.a
+
+build : $(OBJ)
+	$(AR) $(ARFLAGS) $(LIB) $(OBJDIR)/*.o
+	cp -fp $(INC) $(INCDIR)
+
+$(OBJDIR)/%.o : %.cpp
+	$(CC) $(INCPATH) $(CFLAGS) $< -o $@
+
+clean :
+	rm -f $(OBJDIR)/*.o

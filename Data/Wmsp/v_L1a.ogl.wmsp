@@ -1,0 +1,37 @@
+!!ARBvp1.0
+# cgc version 1.4.0000, build date Jun  9 2005 12:09:02
+# command line args: -profile arbvp1
+# source file: Lighting.cg
+#vendor NVIDIA Corporation
+#version 1.0.02
+#profile arbvp1
+#program v_L1a
+#semantic v_L1a.WVPMatrix
+#semantic v_L1a.MaterialEmissive
+#semantic v_L1a.MaterialAmbient
+#semantic v_L1a.Light0Ambient
+#semantic v_L1a.Light0Attenuation
+#var float4 kModelPosition : $vin.POSITION : POSITION : 0 : 1
+#var float4 kClipPosition : $vout.POSITION : HPOS : 1 : 1
+#var float4 kVertexColor : $vout.COLOR : COL0 : 2 : 1
+#var float4x4 WVPMatrix :  : c[1], 4 : 3 : 1
+#var float3 MaterialEmissive :  : c[8] : 4 : 1
+#var float3 MaterialAmbient :  : c[7] : 5 : 1
+#var float3 Light0Ambient :  : c[5] : 6 : 1
+#var float4 Light0Attenuation :  : c[6] : 7 : 1
+#const c[0] = 1
+PARAM c[9] = { { 1 },
+		program.local[1..8] };
+TEMP R0;
+TEMP R1;
+MUL R0, vertex.position.y, c[2];
+MOV R1.x, c[6].w;
+MAD R0, vertex.position.x, c[1], R0;
+MUL R1.xyz, c[5], R1.x;
+MAD R0, vertex.position.z, c[3], R0;
+MUL R1.xyz, R1, c[7];
+MAD result.position, vertex.position.w, c[4], R0;
+ADD result.color.xyz, R1, c[8];
+MOV result.color.w, c[0].x;
+END
+# 9 instructions, 2 R-regs

@@ -1,0 +1,35 @@
+build :
+	cd Boolean2D            ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Boolean2D
+	cd BSplineFitDiscrete   ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=BSplineFitDiscrete
+	cd BSplineFitContinuous ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=BSplineLeastSquares
+	cd ClodPolyline         ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ClodPolyline
+	cd ConvexHull2D         ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ConvexHull2D
+	cd ConvexHull3D         ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ConvexHull3D
+	cd Delaunay2D           ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Delaunay2D
+	cd Delaunay3D           ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Delaunay3D
+	cd DrawImplicitSurface  ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=DrawImplicitSurface
+	cd GeodesicHeightField  ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=GeodesicHeightField
+	cd GeodesicPaths        ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=GeodesicPaths
+	cd MapTextureToQuad     ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=MapTextureToQuad
+	cd MinimalCycleBasis    ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=MinimalCycleBasis
+	cd Polysolid2D          ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Polysolid2D
+	cd QuadraticFreeForm2D  ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=QuadraticFreeForm2D
+	cd Triangulation        ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Triangulation
+
+clean :
+	cd Boolean2D            ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Boolean2D
+	cd BSplineFitContinuous ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=BSplineLeastSquares
+	cd BSplineFitDiscrete   ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=BSplineFitDiscrete
+	cd ClodPolyline         ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ClodPolyline
+	cd ConvexHull2D         ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ConvexHull2D
+	cd ConvexHull3D         ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ConvexHull3D
+	cd Delaunay2D           ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Delaunay2D
+	cd Delaunay3D           ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Delaunay3D
+	cd DrawImplicitSurface  ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=DrawImplicitSurface
+	cd GeodesicHeightField  ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=GeodesicHeightField
+	cd GeodesicPaths        ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=GeodesicPaths
+	cd MapTextureToQuad     ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=MapTextureToQuad
+	cd MinimalCycleBasis    ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=MinimalCycleBasis
+	cd Polysolid2D          ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Polysolid2D
+	cd QuadraticFreeForm2D  ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=QuadraticFreeForm2D
+	cd Triangulation        ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=Triangulation

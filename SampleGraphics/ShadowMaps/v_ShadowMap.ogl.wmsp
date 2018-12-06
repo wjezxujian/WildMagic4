@@ -1,0 +1,28 @@
+!!ARBvp1.0
+# cgc version 1.4.0000, build date Jun  9 2005 12:09:02
+# command line args: -profile arbvp1
+# source file: ProjectedShadow.cg
+#vendor NVIDIA Corporation
+#version 1.0.02
+#profile arbvp1
+#program v_ShadowMap
+#semantic v_ShadowMap.WVPMatrix
+#semantic v_ShadowMap.ProjectorMatrix
+#var float4 kModelPosition : $vin.POSITION : POSITION : 0 : 1
+#var float4 kClipPosition : $vout.POSITION : HPOS : 1 : 1
+#var float4 kProjectedTCoord : $vout.TEXCOORD0 : TEX0 : 2 : 1
+#var float4x4 WVPMatrix :  : c[1], 4 : 3 : 1
+#var float4x4 ProjectorMatrix :  : c[5], 4 : 4 : 1
+PARAM c[9] = { program.local[0..8] };
+TEMP R0;
+TEMP R1;
+MUL R0, vertex.position.y, c[2];
+MUL R1, vertex.position.y, c[6];
+MAD R0, vertex.position.x, c[1], R0;
+MAD R1, vertex.position.x, c[5], R1;
+MAD R0, vertex.position.z, c[3], R0;
+MAD R1, vertex.position.z, c[7], R1;
+MAD result.position, vertex.position.w, c[4], R0;
+MAD result.texcoord[0], vertex.position.w, c[8], R1;
+END
+# 8 instructions, 2 R-regs

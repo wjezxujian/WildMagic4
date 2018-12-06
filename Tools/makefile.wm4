@@ -1,0 +1,5 @@
+build :
+	cd ScenePrinter          ; make CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ScenePrinter
+
+clean :
+	cd ScenePrinter          ; make clean CFG=$(CFG) SYS=$(SYS) GRF=$(GRF) -f ../makeapp.wm4 APP=ScenePrinter

@@ -1,0 +1,247 @@
+!!ARBvp1.0
+# cgc version 1.4.0000, build date Jun  9 2005 12:09:02
+# command line args: -profile arbvp1
+# source file: RipplingOcean.cg
+#vendor NVIDIA Corporation
+#version 1.0.02
+#profile arbvp1
+#program v_RipplingOcean
+#semantic v_RipplingOcean.WVPMatrix
+#semantic v_RipplingOcean.CameraWorldPosition
+#semantic v_RipplingOcean.LightDir
+#semantic v_RipplingOcean.WaveDirX
+#semantic v_RipplingOcean.WaveDirY
+#semantic v_RipplingOcean.WaveSpeed
+#semantic v_RipplingOcean.WaveOffset
+#semantic v_RipplingOcean.WaveHeight
+#semantic v_RipplingOcean.BumpSpeed
+#semantic v_RipplingOcean.Constants
+#var float4 kModelPosition : $vin.POSITION : POSITION : 0 : 1
+#var float4 kModelNormal : $vin.NORMAL : NORMAL : 1 : 1
+#var float3 kModelTangent : $vin.COLOR : COLOR0 : 2 : 1
+#var float2 kWaveTCoord : $vin.TEXCOORD0 : TEXCOORD0 : 3 : 1
+#var float4 kClipPosition : $vout.POSITION : HPOS : 4 : 1
+#var float2 kBumpTCoord0 : $vout.TEXCOORD0 : TEX0 : 5 : 1
+#var float2 kBumpTCoord1 : $vout.TEXCOORD1 : TEX1 : 6 : 1
+#var float3 kViewDir : $vout.TEXCOORD2 : TEX2 : 7 : 1
+#var float3 kTangent : $vout.TEXCOORD3 : TEX3 : 8 : 1
+#var float3 kBinormal : $vout.TEXCOORD4 : TEX4 : 9 : 1
+#var float3 kNormal : $vout.TEXCOORD5 : TEX5 : 10 : 1
+#var float4 kLightDirPlusAmbient : $vout.TEXCOORD6 : TEX6 : 11 : 1
+#var float4x4 WVPMatrix :  : c[1], 4 : 12 : 1
+#var float3 CameraWorldPosition :  : c[16] : 13 : 1
+#var float3 LightDir :  : c[18] : 14 : 1
+#var float4 WaveDirX :  : c[7] : 15 : 1
+#var float4 WaveDirY :  : c[8] : 16 : 1
+#var float4 WaveSpeed :  : c[6] : 17 : 1
+#var float4 WaveOffset :  : c[9] : 18 : 1
+#var float4 WaveHeight :  : c[14] : 19 : 1
+#var float4 BumpSpeed :  : c[17] : 20 : 1
+#var float4 Constants :  : c[5] : 21 : 1
+#const c[0] = 0.5 6.283185 0.1591549 0.25
+#const c[10] = 0 0.5 1 -1
+#const c[11] = 24.9808 -24.9808 -60.14581 60.14581
+#const c[12] = 85.45379 -85.45379 -64.93935 64.93935
+#const c[13] = 19.73921 -19.73921 -9 0.75
+#const c[15] = 2
+PARAM c[19] = { { 0.5, 6.2831855, 0.15915494, 0.25 },
+		program.local[1..9],
+		{ 0, 0.5, 1, -1 },
+		{ 24.980804, -24.980804, -60.145809, 60.145809 },
+		{ 85.453789, -85.453789, -64.939354, 64.939354 },
+		{ 19.739208, -19.739208, -9, 0.75 },
+		program.local[14],
+		{ 2 },
+		program.local[16..18] };
+TEMP R0;
+TEMP R1;
+TEMP R2;
+TEMP R3;
+TEMP R4;
+TEMP R5;
+TEMP R6;
+TEMP R7;
+TEMP R8;
+MUL R0, vertex.texcoord[0].y, c[8];
+MAD R1, vertex.texcoord[0].x, c[7], R0;
+MOV R0, c[6];
+MAD R0, c[5].w, R0, R1;
+ADD R0, R0, c[9];
+FRC R0, R0;
+ADD R0, R0, -c[0].x;
+MUL R8, R0, c[0].y;
+MUL R0.y, R8.x, c[0].z;
+MUL R0.x, R8.y, c[0].z;
+FRC R0.w, R0.x;
+FRC R1.w, R0.y;
+ADD R0.xyz, -R1.w, c[10];
+MUL R0.xyz, R0, R0;
+MAD R3.xyz, R0, c[11].xyxw, c[11].zwzw;
+MAD R3.xyz, R3, R0, c[12].xyxw;
+MAD R3.xyz, R3, R0, c[12].zwzw;
+MAD R3.xyz, R3, R0, c[13].xyxw;
+MAD R3.xyz, R3, R0, c[10].wzww;
+SGE R0.xy, R1.w, c[13].zwzw;
+SLT R0.z, R1.w, c[0].w;
+ADD R1.xyz, -R0.w, c[10];
+MUL R1.xyz, R1, R1;
+MAD R2.xyz, R1, c[11].xyxw, c[11].zwzw;
+MAD R2.xyz, R2, R1, c[12].xyxw;
+MAD R2.xyz, R2, R1, c[12].zwzw;
+MAD R2.xyz, R2, R1, c[13].xyxw;
+MOV R4.yz, R0.xxyw;
+MOV R4.x, R0.z;
+MAD R1.xyz, R2, R1, c[10].wzww;
+MOV R0.xz, R4;
+DP3 R0.y, R4, c[10].wzww;
+DP3 R0.x, R3, -R0;
+SLT R0.y, R0.w, c[0].w;
+SGE R0.zw, R0.w, c[13];
+MOV R3.yz, R0.xzww;
+MOV R3.x, R0.y;
+MUL R0.z, R8, c[0];
+MUL R0.w, R8, c[0].z;
+FRC R0.w, R0;
+SLT R1.w, R0, c[0];
+FRC R0.z, R0;
+MOV R5.x, R1.w;
+MOV R2.xz, R3;
+DP3 R2.y, R3, c[10].wzww;
+DP3 R0.y, R1, -R2;
+ADD R2.xyz, -R0.w, c[10];
+MUL R3.xyz, R2, R2;
+MAD R4.xyz, R3, c[11].xyxw, c[11].zwzw;
+MAD R4.xyz, R4, R3, c[12].xyxw;
+MAD R4.xyz, R4, R3, c[12].zwzw;
+MAD R4.xyz, R4, R3, c[13].xyxw;
+MAD R4.xyz, R4, R3, c[10].wzww;
+SGE R3.xy, R0.w, c[13].zwzw;
+MOV R5.yz, R3.xxyw;
+ADD R1.xyz, -R0.z, c[10];
+MUL R1.xyz, R1, R1;
+MAD R2.xyz, R1, c[11].xyxw, c[11].zwzw;
+MAD R2.xyz, R2, R1, c[12].xyxw;
+MAD R2.xyz, R2, R1, c[12].zwzw;
+MAD R2.xyz, R2, R1, c[13].xyxw;
+MAD R1.xyz, R2, R1, c[10].wzww;
+MOV R3.xz, R5;
+DP3 R3.y, R5, c[10].wzww;
+DP3 R0.w, R4, -R3;
+SGE R2.xy, R0.z, c[13].zwzw;
+SLT R1.w, R0.z, c[0];
+MOV R3.yz, R2.xxyw;
+MOV R3.x, R1.w;
+MOV R2.xz, R3;
+DP3 R2.y, R3, c[10].wzww;
+DP3 R0.z, R1, -R2;
+MUL R0, R0, c[14];
+DP4 R2.yz, R0, c[8];
+DP4 R2.x, R0, c[7];
+MUL R1.xyz, vertex.color, c[15].x;
+ADD R0.xyz, R1, -c[10].z;
+MUL R2.xyz, -R2, c[5].x;
+ADD R1.z, R0, R2;
+MOV R1.xy, R0;
+ADD R0.xy, vertex.normal, R2;
+DP3 R0.w, R1, R1;
+MOV R0.z, vertex.normal;
+RSQ R2.x, R0.w;
+MUL R5.xyz, R2.x, R1;
+DP3 R1.w, R0, R0;
+RSQ R0.w, R1.w;
+MUL R4.xyz, R0.w, R0;
+MAD R0.w, R8.x, c[0].z, -c[0];
+FRC R1.w, R0;
+MUL R0.xyz, R4.zxyw, R5.yzxw;
+MAD R6.xyz, R4.yzxw, R5.zxyw, -R0;
+MAD R0.w, R8.y, c[0].z, -c[0];
+FRC R0.w, R0;
+ADD R0.xyz, -R1.w, c[10];
+MUL R0.xyz, R0, R0;
+MUL R1.xyz, R0, c[11].xyxw;
+ADD R2.xyz, -R0.w, c[10];
+MUL R2.xyz, R2, R2;
+MAD R3.xyz, R2, c[11].xyxw, c[11].zwzw;
+MAD R3.xyz, R3, R2, c[12].xyxw;
+MAD R3.xyz, R3, R2, c[12].zwzw;
+ADD R1.xyz, R1, c[11].zwzw;
+MAD R1.xyz, R1, R0, c[12].xyxw;
+MAD R1.xyz, R1, R0, c[12].zwzw;
+MAD R1.xyz, R1, R0, c[13].xyxw;
+MAD R1.xyz, R1, R0, c[10].wzww;
+SGE R0.xy, R1.w, c[13].zwzw;
+SLT R0.z, R1.w, c[0].w;
+MAD R3.xyz, R3, R2, c[13].xyxw;
+MOV R7.yz, R0.xxyw;
+MOV R7.x, R0.z;
+MOV R0.xz, R7;
+DP3 R0.y, R7, c[10].wzww;
+DP3 R0.x, R1, -R0;
+SLT R0.y, R0.w, c[0].w;
+MAD R1.xyz, R3, R2, c[10].wzww;
+SGE R0.zw, R0.w, c[13];
+MOV R3.yz, R0.xzww;
+MOV R3.x, R0.y;
+MAD R0.z, R8, c[0], -c[0].w;
+MAD R0.w, R8, c[0].z, -c[0];
+FRC R0.w, R0;
+SLT R1.w, R0, c[0];
+FRC R0.z, R0;
+MOV R8.x, R1.w;
+MOV R2.xz, R3;
+DP3 R2.y, R3, c[10].wzww;
+DP3 R0.y, R1, -R2;
+ADD R2.xyz, -R0.w, c[10];
+MUL R3.xyz, R2, R2;
+MAD R7.xyz, R3, c[11].xyxw, c[11].zwzw;
+MAD R7.xyz, R7, R3, c[12].xyxw;
+MAD R7.xyz, R7, R3, c[12].zwzw;
+MAD R7.xyz, R7, R3, c[13].xyxw;
+MAD R7.xyz, R7, R3, c[10].wzww;
+SGE R3.xy, R0.w, c[13].zwzw;
+MOV R8.yz, R3.xxyw;
+ADD R1.xyz, -R0.z, c[10];
+MUL R1.xyz, R1, R1;
+MAD R2.xyz, R1, c[11].xyxw, c[11].zwzw;
+MAD R2.xyz, R2, R1, c[12].xyxw;
+MAD R2.xyz, R2, R1, c[12].zwzw;
+MAD R2.xyz, R2, R1, c[13].xyxw;
+MAD R1.xyz, R2, R1, c[10].wzww;
+SGE R2.xy, R0.z, c[13].zwzw;
+MOV R3.xz, R8;
+DP3 R3.y, R8, c[10].wzww;
+DP3 R0.w, R7, -R3;
+SLT R1.w, R0.z, c[0];
+MOV R3.yz, R2.xxyw;
+MOV R3.x, R1.w;
+MOV R2.xz, R3;
+DP3 R2.y, R3, c[10].wzww;
+DP3 R0.z, R1, -R2;
+DP4 R0.x, R0, c[14];
+DP3 R0.w, R6, R6;
+RSQ R0.w, R0.w;
+MUL R2.xyz, R0.w, R6;
+MUL R0.xyz, R0.x, vertex.normal;
+ADD R0.xyz, R0, vertex.position;
+MUL R1, R0.y, c[2];
+MAD result.texcoord[4].xyz, R2, c[0].x, c[0].x;
+MAD R1, R0.x, c[1], R1;
+ADD R2.xyz, R0, -c[16];
+MAD R0, R0.z, c[3], R1;
+ADD result.position, R0, c[4];
+DP3 R1.x, R2, R2;
+RSQ R0.x, R1.x;
+MUL R0.xyz, R0.x, R2;
+MAD result.texcoord[2].xyz, R0, c[0].x, c[0].x;
+MOV R0.w, c[0].x;
+MUL R1.xyz, c[18], R0.w;
+MUL R0.xy, vertex.texcoord[0], c[5].z;
+MOV R0.z, c[5].w;
+MAD result.texcoord[5].xyz, R4, c[0].x, c[0].x;
+MAD result.texcoord[3].xyz, R5, c[0].x, c[0].x;
+MAD result.texcoord[0].xy, c[17], R0.z, R0;
+MAD result.texcoord[1].xy, c[17].zwzw, R0.z, R0.yxzw;
+ADD result.texcoord[6].xyz, R1, c[0].x;
+MOV result.texcoord[6].w, c[5].y;
+END
+# 181 instructions, 9 R-regs
